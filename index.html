@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120E17">
+<meta name="robots" content="noindex">
+<title>Joyn</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2218%22 fill=%22%23120E17%22/%3E%3Ccircle cx=%2226%22 cy=%2226%22 r=%2216%22 fill=%22%23F0568A%22/%3E%3Ccircle cx=%2238%22 cy=%2238%22 r=%2216%22 fill=%22%23F2C879%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ink:#120E17;--card:#1D1624;--line:#2E2438;--rose:#E8507F;--gold:#F2C879;
+  --mute:#A99BB7;--text:#F3EDF7;--bad:#FF8A8A;--good:#8FE3C9;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--ink);color:var(--text);
+  font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent}
+body{padding-top:env(safe-area-inset-top,0px)}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+
+.center{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:32px 28px;gap:14px}
+.word{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:4.2rem;line-height:1;letter-spacing:.01em;margin-top:6px}
+.lead{color:var(--mute);max-width:21rem}
+.fine{color:var(--mute);font-size:.85rem;max-width:20rem}
+
+.page{max-width:30rem;margin:0 auto;padding:28px 20px 40px}
+.shell{max-width:30rem;margin:0 auto;padding:0 20px calc(88px + env(safe-area-inset-bottom,0px))}
+.h{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:1.9rem;line-height:1.15}
+.muted{color:var(--mute)}
+.top{display:flex;align-items:center;gap:10px;padding:18px 0 6px}
+.brand{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:1.4rem}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;
+  border-radius:16px;border:1px solid var(--line);background:transparent;font-weight:700;cursor:pointer;width:100%;max-width:21rem}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#F0568A,#C2408F);box-shadow:0 10px 24px -12px rgba(232,80,127,.9)}
+.btn.quiet{color:var(--mute)}
+
+.form{display:flex;flex-direction:column;gap:16px;margin-top:22px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:500}
+.field input[type=text],.field textarea{width:100%;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:13px 14px;outline:none}
+.field input[type=text]:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:84px}
+.hint{color:var(--mute);font-size:.85rem}
+.check{display:flex;gap:12px;align-items:flex-start}
+.check input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--rose);flex:none}
+.msg{min-height:1.4em;font-size:.92rem;color:var(--bad)}
+.msg.ok{color:var(--good)}
+
+.list{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:14px}
+.row .who{min-width:0}
+.row .nm{font-weight:700;overflow-wrap:anywhere}
+.row .you{color:var(--gold);font-weight:500;margin-left:6px;font-size:.85rem}
+.row .ct{color:var(--gold);font-size:.9rem}
+.row .bio{color:var(--mute);font-size:.92rem;margin-top:4px;overflow-wrap:anywhere}
+.empty{color:var(--mute);background:var(--card);border:1px dashed var(--line);border-radius:18px;padding:18px}
+
+.av{position:relative;flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:inline-block;
+  background:linear-gradient(135deg,#F0568A,#E9B35E)}
+.av b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.av.big{width:64px;height:64px}
+.me-card{display:flex;gap:14px;align-items:center;margin-top:18px}
+.me-card .em{color:var(--mute);font-size:.9rem;overflow-wrap:anywhere}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px;
+  padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));
+  background:rgba(18,14,23,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.tabs button{flex:1;max-width:14rem;min-height:46px;border-radius:14px;border:0;background:transparent;color:var(--mute);font-weight:700;cursor:pointer}
+.tabs button.on{color:var(--text);background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.sep{height:1px;background:var(--line);margin:26px 0 8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8ROV5GJexBeTw8tNQOvP_oXriEeY43fw",
+  authDomain: "joyn-6b57c.firebaseapp.com",
+  projectId: "joyn-6b57c",
+  storageBucket: "joyn-6b57c.firebasestorage.app",
+  messagingSenderId: "69868208922",
+  appId: "1:69868208922:web:baa8104a9e96ede97062a3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ---------- small helpers ---------- */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+const val = id => ($(id) ? $(id).value : '');
+
+const S = { ready:false, user:null, profile:null, members:[], tab:'members',
+            busy:false, unsub:null, loadErr:'', listErr:'' };
+
+function friendly(e){
+  const c = (e && e.code) || '';
+  const m = {
+    'auth/unauthorized-domain':'This website address is not allowed in Firebase yet. Add it in Authentication > Settings > Authorized domains.',
+    'auth/network-request-failed':'No internet. Check your connection and try again.',
+    'auth/popup-blocked':'The login window was blocked. Allow pop-ups and try again.',
+    'permission-denied':'The database refused this request. The Firestore rules need to be checked.',
+    'unavailable':'The database cannot be reached right now. Try again in a minute.'
+  };
+  return m[c] || ('Something went wrong (' + (c || (e && e.message) || 'unknown') + ').');
+}
+
+function logo(size, k){
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
+  <defs>
+    <linearGradient id="ga${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0568A"/><stop offset="1" stop-color="#C2408F"/></linearGradient>
+    <linearGradient id="gb${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7D58E"/><stop offset="1" stop-color="#E9B35E"/></linearGradient>
+    <clipPath id="gc${k}"><circle cx="26" cy="26" r="16"/></clipPath>
+  </defs>
+  <circle cx="26" cy="26" r="16" fill="url(#ga${k})"/>
+  <circle cx="38" cy="38" r="16" fill="url(#gb${k})"/>
+  <circle cx="38" cy="38" r="16" fill="#fff" clip-path="url(#gc${k})"/>
+  <path d="M32 40.500c-6-3.800-8-6.400-8-9a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 2.600-2 5.200-8 9z" fill="#E8507F"/>
+</svg>`;
+}
+
+function avatar(p, big){
+  const ini = esc(((p && p.name) || '?').trim().charAt(0).toUpperCase() || '?');
+  const img = p && p.photoURL
+    ? `<img src="${esc(p.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
+  return `<span class="av${big ? ' big' : ''}"><b>${ini}</b>${img}</span>`;
+}
+
+function setMsg(text, ok){
+  const el = $('msg');
+  if (!el) return;
+  el.textContent = text || '';
+  el.className = 'msg' + (ok ? ' ok' : '');
+}
+function setBusy(b){
+  S.busy = b;
+  document.querySelectorAll('button[type=submit], [data-act=login]').forEach(x => { x.disabled = b; });
+}
+
+/* ---------- views ---------- */
+function loadingView(){
+  return `<main class="center">${logo(72, 'L')}<p class="muted">Loading…</p></main>`;
+}
+
+function errorView(){
+  return `<main class="center">${logo(72, 'E')}
+    <h2 class="h">Could not load</h2>
+    <p class="lead">${esc(S.loadErr)}</p>
+    <button class="btn primary" data-act="reload">Try again</button>
+  </main>`;
+}
+
+function loginView(){
+  return `<main class="center">
+    ${logo(88, 'A')}
+    <h1 class="word">Joyn</h1>
+    <p class="lead">Plans, people and places for your group.</p>
+    <button class="btn primary" data-act="login">Continue with Google</button>
+    <p id="msg" class="msg" role="alert"></p>
+    <p class="fine">Only for friends who were invited. 18+ only.</p>
+  </main>`;
+}
+
+function fields(p, forNew){
+  const name = p ? p.name : (S.user.displayName || '');
+  return `
+    <div class="field">
+      <label for="f-name">Name</label>
+      <input id="f-name" type="text" maxlength="40" autocomplete="name" value="${esc(name)}">
+    </div>
+    <div class="field">
+      <label for="f-city">City</label>
+      <input id="f-city" type="text" maxlength="40" placeholder="For example: Lucknow" value="${esc(p ? p.city : '')}">
+    </div>
+    <div class="field">
+      <label for="f-bio">About you</label>
+      <textarea id="f-bio" maxlength="160" placeholder="One or two lines about you">${esc(p ? p.bio : '')}</textarea>
+      <span class="hint">Up to 160 letters. Everyone in the group can see this.</span>
+    </div>
+    ${forNew ? `<label class="check"><input id="f-age" type="checkbox"><span>I am 18 years or older</span></label>` : ''}`;
+}
+
+function onboardView(){
+  return `<main class="page">
+    <div>${logo(48, 'O')}</div>
+    <h2 class="h" style="margin-top:14px">Set up your profile</h2>
+    <p class="muted" style="margin-top:6px">This is what your group will see.</p>
+    <form id="pf-new" class="form" novalidate>
+      ${fields(null, true)}
+      <p id="msg" class="msg" role="alert"></p>
+      <button class="btn primary" type="submit">Save profile</button>
+    </form>
+    <div class="sep"></div>
+    <button class="btn quiet" data-act="logout">Use a different Google account</button>
+  </main>`;
+}
+
+function membersView(){
+  return `<h2 class="h" style="margin-top:12px">Your group</h2>
+    <p id="count" class="muted" style="margin-top:4px"></p>
+    <ul id="list" class="list"></ul>`;
+}
+
+function meView(){
+  const p = S.profile || {};
+  return `<h2 class="h" style="margin-top:12px">Your profile</h2>
+    <div class="me-card">${avatar(p, true)}
+      <div><div style="font-weight:700;overflow-wrap:anywhere">${esc(p.name)}</div>
+      <div class="em">${esc(S.user.email || '')}</div></div></div>
+    <form id="pf-edit" class="form" novalidate>
+      ${fields(p, false)}
+      <p id="msg" class="msg" role="alert"></p>
+      <button class="btn primary" type="submit">Save changes</button>
+    </form>
+    <div class="sep"></div>
+    <button class="btn" data-act="logout">Log out</button>`;
+}
+
+function mainView(){
+  return `<div class="shell">
+    <header class="top">${logo(30, 'H')}<span class="brand">Joyn</span></header>
+    <main id="view">${S.tab === 'members' ? membersView() : meView()}</main>
+  </div>
+  <nav class="tabs" aria-label="Main">
+    <button data-tab="members" class="${S.tab === 'members' ? 'on' : ''}">Members</button>
+    <button data-tab="me" class="${S.tab === 'me' ? 'on' : ''}">Me</button>
+  </nav>`;
+}
+
+function paintMembers(){
+  const list = $('list');
+  if (!list) return;
+  if (S.listErr){
+    list.innerHTML = `<li class="empty">${esc(S.listErr)}</li>`;
+    if ($('count')) $('count').textContent = '';
+    return;
+  }
+  const me = S.user ? S.user.uid : '';
+  const arr = S.members.filter(m => m.name).sort((a, b) =>
+    (a.id === me ? -1 : b.id === me ? 1 : String(a.name).localeCompare(String(b.name))));
+  if ($('count')) $('count').textContent = arr.length + (arr.length === 1 ? ' member' : ' members');
+  if (!arr.length){
+    list.innerHTML = `<li class="empty">Nobody here yet. Share the app link with your group.</li>`;
+    return;
+  }
+  list.innerHTML = arr.map(m => `<li class="row">${avatar(m)}
+    <div class="who">
+      <div><span class="nm">${esc(m.name)}</span>${m.id === me ? '<span class="you">you</span>' : ''}</div>
+      ${m.city ? `<div class="ct">${esc(m.city)}</div>` : ''}
+      ${m.bio ? `<div class="bio">${esc(m.bio)}</div>` : ''}
+    </div></li>`).join('');
+}
+
+function render(){
+  const root = $('app');
+  if (!S.ready) root.innerHTML = loadingView();
+  else if (!S.user) root.innerHTML = loginView();
+  else if (S.loadErr) root.innerHTML = errorView();
+  else if (!S.profile) root.innerHTML = onboardView();
+  else {
+    root.innerHTML = mainView();
+    if (S.tab === 'members') paintMembers();
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ---------- actions ---------- */
+async function login(){
+  if (S.busy) return;
+  setMsg('');
+  setBusy(true);
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment'){
+      try { await signInWithRedirect(auth, provider); return; } catch (e2) { e = e2; }
+    }
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') setMsg(friendly(e));
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function logout(){
+  try { await signOut(auth); } catch (e) { /* ignore */ }
+}
+
+async function saveProfile(isNew){
+  if (S.busy) return;
+  const name = val('f-name').trim();
+  const city = val('f-city').trim();
+  const bio  = val('f-bio').trim();
+  if (name.length < 2) return setMsg('Enter your name (at least 2 letters).');
+  if (isNew && !($('f-age') && $('f-age').checked)) return setMsg('Please confirm that you are 18 or older.');
+  setMsg('');
+  setBusy(true);
+  try {
+    const data = { name, city, bio, photoURL: S.user.photoURL || '', updatedAt: serverTimestamp() };
+    if (isNew){ data.age18 = true; data.createdAt = serverTimestamp(); }
+    await setDoc(doc(db, 'users', S.user.uid), data, { merge: true });
+    S.profile = Object.assign({}, S.profile || {}, { name, city, bio, photoURL: data.photoURL });
+    if (isNew) render();
+    else { setMsg('Saved.', true); }
+  } catch (e) {
+    setMsg(friendly(e));
+  } finally {
+    setBusy(false);
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act],[data-tab]');
+  if (!t) return;
+  if (t.dataset.tab){ S.tab = t.dataset.tab; render(); return; }
+  const a = t.dataset.act;
+  if (a === 'login') login();
+  else if (a === 'logout') logout();
+  else if (a === 'reload') location.reload();
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'pf-new') saveProfile(true);
+  else if (e.target.id === 'pf-edit') saveProfile(false);
+});
+
+/* ---------- start ---------- */
+render();
+onAuthStateChanged(auth, async u => {
+  if (S.unsub){ S.unsub(); S.unsub = null; }
+  S.user = u; S.profile = null; S.members = []; S.loadErr = ''; S.listErr = ''; S.tab = 'members';
+  if (u){
+    try {
+      const snap = await getDoc(doc(db, 'users', u.uid));
+      S.profile = snap.exists() ? snap.data() : null;
+    } catch (e) {
+      S.loadErr = friendly(e);
+    }
+    S.unsub = onSnapshot(collection(db, 'users'),
+      snap => { S.listErr = ''; S.members = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); paintMembers(); },
+      e => { S.listErr = friendly(e); paintMembers(); });
+  }
+  S.ready = true;
+  render();
+});
+</script>
+</body>
+</html>
