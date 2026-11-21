@@ -50,9 +50,9 @@ h1,h2,h3,p{margin:0}
 .form{display:flex;flex-direction:column;gap:16px;margin-top:22px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-weight:500}
-.field input[type=text],.field textarea,.field select{width:100%;background:var(--card);border:1px solid var(--line);
+.field input[type=text],.field input[type=date],.field input[type=time],.field textarea,.field select{width:100%;background:var(--card);border:1px solid var(--line);
   border-radius:14px;padding:13px 14px;outline:none}
-.field input[type=text]:focus,.field textarea:focus,.field select:focus{border-color:var(--gold)}
+.field input[type=text]:focus,.field input[type=date]:focus,.field input[type=time]:focus,.field textarea:focus,.field select:focus{border-color:var(--gold)}
 .field select option{background:#1D1624;color:#F3EDF7}
 .field textarea{resize:vertical;min-height:84px}
 .hint{color:var(--mute);font-size:.85rem}
@@ -85,7 +85,32 @@ h1,h2,h3,p{margin:0}
 .tabs button{flex:1;max-width:14rem;min-height:46px;border-radius:14px;border:0;background:transparent;color:var(--mute);font-weight:700;cursor:pointer}
 .tabs button.on{color:var(--text);background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
 .sep{height:1px;background:var(--line);margin:26px 0 8px}
-.tabs{z-index:2000}
+.tabs{z-index:2000;gap:4px}
+.tabs button{font-size:.84rem;padding:0 2px}
+.plan{list-style:none}
+.plan .pt{font-weight:700;font-size:1.05rem;overflow-wrap:anywhere}
+.plan .pwhen{color:var(--gold);margin-top:2px}
+.plan .pl{margin-top:10px}
+.plan .note{color:var(--mute);margin-top:8px;overflow-wrap:anywhere}
+.plan .by{color:var(--mute);font-size:.8rem;margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.rsvps{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mini.on{background:linear-gradient(135deg,#F0568A,#C2408F);border-color:transparent;color:#fff}
+.who2{margin-top:10px;color:var(--mute);font-size:.88rem;overflow-wrap:anywhere}
+.who2 b{color:var(--text);font-weight:500}
+.msgs{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.bub{max-width:84%;padding:9px 12px;border-radius:16px;background:var(--card);border:1px solid var(--line);overflow-wrap:anywhere;align-self:flex-start}
+.bub.me{align-self:flex-end;background:linear-gradient(135deg,#6b2650,#4d2a66);border-color:transparent}
+.bub .who{font-size:.75rem;color:var(--gold);margin-bottom:2px;font-weight:500}
+.bub .tm{font-size:.7rem;color:var(--mute);margin-top:3px;display:flex;gap:10px;justify-content:flex-end}
+.day{align-self:center;font-size:.75rem;color:var(--mute);margin:6px 0;list-style:none;text-align:center}
+.lnk{background:none;border:0;color:var(--mute);font-size:.7rem;text-decoration:underline;cursor:pointer;padding:0}
+.shell.chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.composer{position:fixed;left:0;right:0;bottom:calc(67px + env(safe-area-inset-bottom,0px));z-index:1500;
+  background:rgba(18,14,23,.96);border-top:1px solid var(--line);padding:10px 20px}
+.composer .cin{max-width:30rem;margin:0 auto;display:flex;gap:8px}
+.composer input{flex:1;min-width:0;min-height:46px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 14px;outline:none}
+.composer input:focus{border-color:var(--gold)}
+.composer .btn.small{flex:none}
 
 .btn.small{width:auto;flex:1;min-height:44px;padding:0 16px;font-size:.95rem}
 .searchrow{display:flex;gap:8px;margin-top:14px}
@@ -128,7 +153,7 @@ h1,h2,h3,p{margin:0}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, collection, serverTimestamp }
+import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -153,6 +178,8 @@ const val = id => ($(id) ? $(id).value : '');
 const S = { ready:false, user:null, profile:null, members:[], tab:'map',
             busy:false, unsub:null, loadErr:'', listErr:'',
             places:[], unsubP:null, placesErr:'', results:[],
+            plans:[], rsvps:[], msgs:[], unsubPl:null, unsubR:null, unsubM:null,
+            plansErr:'', chatErr:'', chatFirst:false, focus:null,
             map:null, layer:null, markers:{}, view:null,
             adding:false, pending:null, pendMarker:null, userMarker:null };
 
@@ -311,7 +338,28 @@ function mapView(){
     <ul id="plist" class="list"></ul>`;
 }
 
+function plansView(){
+  return `<h2 class="h" style="margin-top:12px">Plans</h2>
+    <p class="muted" style="margin-top:4px">Outings your group is planning. Tap Going so everyone knows.</p>
+    <button class="btn primary" type="button" data-act="newplan" style="margin-top:16px">+ New plan</button>
+    <div id="planbox"></div>
+    <ul id="planlist" class="list"></ul>`;
+}
+
+function chatView(){
+  return `<h2 class="h" style="margin-top:12px">Group chat</h2>
+    <div id="msgs" class="msgs"></div>
+    <form id="chat-form" class="composer" novalidate>
+      <div class="cin">
+        <input id="cmsg" type="text" maxlength="500" placeholder="Message your group" autocomplete="off" enterkeyhint="send">
+        <button class="btn small primary" type="submit">Send</button>
+      </div>
+    </form>`;
+}
+
 function tabView(){
+  if (S.tab === 'plans') return plansView();
+  if (S.tab === 'chat') return chatView();
   if (S.tab === 'map') return mapView();
   if (S.tab === 'members') return membersView();
   return meView();
@@ -319,12 +367,12 @@ function tabView(){
 
 function mainView(){
   const b = (t, label) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}">${label}</button>`;
-  return `<div class="shell">
+  return `<div class="shell${S.tab === 'chat' ? ' chat' : ''}">
     <header class="top">${logo(30, 'H')}<span class="brand">Joyn</span></header>
     <main id="view">${tabView()}</main>
   </div>
   <nav class="tabs" aria-label="Main">
-    ${b('map', 'Map')}${b('members', 'Members')}${b('me', 'Me')}
+    ${b('map', 'Map')}${b('plans', 'Plans')}${b('chat', 'Chat')}${b('members', 'Members')}${b('me', 'Me')}
   </nav>`;
 }
 
@@ -363,6 +411,8 @@ function render(){
     root.innerHTML = mainView();
     if (S.tab === 'members') paintMembers();
     else if (S.tab === 'map') initMap();
+    else if (S.tab === 'plans') paintPlans();
+    else if (S.tab === 'chat'){ S.chatFirst = true; paintChat(); }
   }
   window.scrollTo(0, 0);
 }
@@ -402,6 +452,7 @@ function initMap(){
   S.map.on('click', e => { if (S.adding) setPending(e.latlng); });
   setTimeout(() => { if (S.map) S.map.invalidateSize(); }, 60);
   paintPlaces(true);
+  if (S.focus){ const id = S.focus; S.focus = null; setTimeout(() => flyToPlace(id), 350); }
 }
 
 function destroyMap(){
@@ -611,6 +662,210 @@ function locateMe(){
   { enableHighAccuracy:true, timeout:12000 });
 }
 
+/* ---------- plans ---------- */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtDate(str){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str || '');
+  if (!m) return esc(str || '');
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+}
+function fmtTime(t){
+  const m = /^(\d{2}):(\d{2})$/.exec(t || '');
+  if (!m) return '';
+  let h = +m[1];
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return h + ':' + m[2] + ' ' + ap;
+}
+
+function showPlanForm(){
+  const box = $('planbox');
+  if (!box) return;
+  if ($('pf-plan')){ box.innerHTML = ''; return; }
+  const opts = '<option value="">No place</option>' +
+    S.places.slice().sort((a, b) => String(a.title).localeCompare(String(b.title)))
+      .map(p => `<option value="${esc(p.id)}">${esc(p.title)}</option>`).join('');
+  box.innerHTML = `<form id="pf-plan" class="form card" novalidate>
+    <h3 class="sub">New plan</h3>
+    <div class="field"><label for="n-title">What is the plan?</label>
+      <input id="n-title" type="text" maxlength="60" placeholder="For example: Coffee at Blue Tokai" autocomplete="off"></div>
+    <div class="field"><label for="n-date">Date</label>
+      <input id="n-date" type="date" min="${todayStr()}"></div>
+    <div class="field"><label for="n-time">Time (optional)</label>
+      <input id="n-time" type="time"></div>
+    <div class="field"><label for="n-place">Place</label>
+      <select id="n-place">${opts}</select>
+      <span class="hint">Pin the place on the Map tab first, then pick it here.</span></div>
+    <div class="field"><label for="n-note">Note (optional)</label>
+      <textarea id="n-note" maxlength="200"></textarea></div>
+    <p id="nmsg" class="msg" role="alert"></p>
+    <div class="two"><button class="btn primary" type="submit">Create plan</button>
+      <button class="btn" type="button" data-act="cancelplan">Cancel</button></div>
+  </form>`;
+  if (box.scrollIntoView) box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function setRsvpDoc(planId, status){
+  return setDoc(doc(db, 'rsvps', planId + '_' + S.user.uid), {
+    planId, uid: S.user.uid, name: (S.profile && S.profile.name) || '', status, updatedAt: serverTimestamp()
+  });
+}
+
+async function savePlan(){
+  if (S.busy) return;
+  const nm = t => { const el = $('nmsg'); if (el) el.textContent = t || ''; };
+  const title = val('n-title').trim();
+  const date = val('n-date');
+  if (!title) return nm('Enter what the plan is.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return nm('Choose a date.');
+  const pl = S.places.find(x => x.id === val('n-place'));
+  nm('');
+  S.busy = true;
+  const btn = document.querySelector('#pf-plan button[type=submit]');
+  if (btn) btn.disabled = true;
+  try {
+    const ref = await addDoc(collection(db, 'plans'), {
+      title, date,
+      time: val('n-time') || '',
+      placeId: pl ? pl.id : '',
+      placeTitle: pl ? String(pl.title).slice(0, 60) : '',
+      note: val('n-note').trim(),
+      by: S.user.uid,
+      byName: (S.profile && S.profile.name) || '',
+      createdAt: serverTimestamp()
+    });
+    try { await setRsvpDoc(ref.id, 'going'); } catch (e2) { /* ignore */ }
+    const box = $('planbox');
+    if (box) box.innerHTML = '';
+  } catch (e) {
+    nm(friendly(e));
+  } finally {
+    S.busy = false;
+    const b2 = document.querySelector('#pf-plan button[type=submit]');
+    if (b2) b2.disabled = false;
+  }
+}
+
+async function toggleRsvp(planId, status){
+  const mine = S.rsvps.find(r => r.planId === planId && r.uid === S.user.uid);
+  try {
+    if (mine && mine.status === status) await deleteDoc(doc(db, 'rsvps', planId + '_' + S.user.uid));
+    else await setRsvpDoc(planId, status);
+  } catch (e) {
+    S.plansErr = friendly(e); paintPlans();
+  }
+}
+
+async function deletePlan(id){
+  if (!confirm('Delete this plan?')) return;
+  try { await deleteDoc(doc(db, 'plans', id)); }
+  catch (e) { S.plansErr = friendly(e); paintPlans(); }
+}
+
+function planCard(p){
+  const me = S.user ? S.user.uid : '';
+  const rs = S.rsvps.filter(r => r.planId === p.id);
+  const mine = rs.find(r => r.uid === me);
+  const by = st => rs.filter(r => r.status === st);
+  const names = st => by(st).map(r => esc(r.name || 'someone')).join(', ');
+  const btn = (st, label) => `<button type="button" class="mini${mine && mine.status === st ? ' on' : ''}" data-rsvp="${st}" data-plan="${esc(p.id)}">${label} ${by(st).length}</button>`;
+  const when = fmtDate(p.date) + (p.time ? ' \u00B7 ' + esc(fmtTime(p.time)) : '');
+  const placeOk = p.placeId && S.places.some(x => x.id === p.placeId);
+  return `<li class="plan card">
+    <div class="pt">${esc(p.title)}</div>
+    <div class="pwhen">&#128197; ${when}</div>
+    ${p.placeTitle ? (placeOk
+      ? `<div class="pl"><button type="button" class="mini" data-goplace="${esc(p.placeId)}">&#128205; ${esc(p.placeTitle)} \u2014 show on map</button></div>`
+      : `<div class="pl hint">&#128205; ${esc(p.placeTitle)}</div>`) : ''}
+    ${p.note ? `<div class="note">${esc(p.note)}</div>` : ''}
+    <div class="rsvps">${btn('going', 'Going')}${btn('maybe', 'Maybe')}${btn('no', "Can't")}</div>
+    ${by('going').length ? `<div class="who2"><b>Going:</b> ${names('going')}</div>` : ''}
+    ${by('maybe').length ? `<div class="who2"><b>Maybe:</b> ${names('maybe')}</div>` : ''}
+    <div class="by"><span>Planned by ${esc(p.byName || 'someone')}</span>
+      ${p.by === me ? `<button type="button" class="lnk" data-delplan="${esc(p.id)}">Delete plan</button>` : ''}</div>
+  </li>`;
+}
+
+function paintPlans(){
+  const list = $('planlist');
+  if (!list) return;
+  if (S.plansErr){ list.innerHTML = `<li class="empty">${esc(S.plansErr)}</li>`; return; }
+  if (!S.plans.length){ list.innerHTML = '<li class="empty">No plans yet. Tap "+ New plan" and invite everyone.</li>'; return; }
+  const today = todayStr();
+  const key = p => (p.date || '') + ' ' + (p.time || '00:00');
+  const up = S.plans.filter(p => (p.date || '') >= today).sort((a, b) => key(a) < key(b) ? -1 : 1);
+  const past = S.plans.filter(p => (p.date || '') < today).sort((a, b) => key(a) < key(b) ? 1 : -1);
+  list.innerHTML = up.map(planCard).join('') +
+    (past.length ? '<li class="day">Earlier</li>' + past.map(planCard).join('') : '');
+}
+
+/* ---------- chat ---------- */
+function tms(m){ return (m.createdAt && m.createdAt.toMillis) ? m.createdAt.toMillis() : Date.now(); }
+function dayLabel(d){
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  const diff = Math.round((t - x) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+}
+function timeLabel(d){ return d.toLocaleTimeString('en-IN', { hour:'numeric', minute:'2-digit' }); }
+
+function paintChat(){
+  const box = $('msgs');
+  if (!box) return;
+  if (S.chatErr){ box.innerHTML = `<div class="empty">${esc(S.chatErr)}</div>`; return; }
+  const atBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 160);
+  if (!S.msgs.length){
+    box.innerHTML = '<div class="empty">No messages yet. Say hello to your group!</div>';
+    return;
+  }
+  const me = S.user ? S.user.uid : '';
+  let last = '';
+  box.innerHTML = S.msgs.slice().sort((a, b) => tms(a) - tms(b)).map(m => {
+    const d = new Date(tms(m));
+    const day = dayLabel(d);
+    let sep = '';
+    if (day !== last){ sep = `<div class="day">${esc(day)}</div>`; last = day; }
+    const mine = m.by === me;
+    return sep + `<div class="bub${mine ? ' me' : ''}">
+      ${mine ? '' : `<div class="who">${esc(m.byName || 'someone')}</div>`}
+      <div>${esc(m.text)}</div>
+      <div class="tm"><span>${esc(timeLabel(d))}</span>${mine ? `<button type="button" class="lnk" data-delmsg="${esc(m.id)}">Delete</button>` : ''}</div>
+    </div>`;
+  }).join('');
+  if (S.chatFirst || atBottom){ S.chatFirst = false; window.scrollTo(0, document.body.scrollHeight); }
+}
+
+async function sendMessage(){
+  const el = $('cmsg');
+  if (!el) return;
+  const text = el.value.trim();
+  if (!text) return;
+  el.value = '';
+  try {
+    await addDoc(collection(db, 'messages'), {
+      text: text.slice(0, 500),
+      by: S.user.uid,
+      byName: (S.profile && S.profile.name) || '',
+      createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    el.value = text;
+    S.chatErr = friendly(e); paintChat();
+  }
+  if (el.focus) el.focus();
+}
+
+async function deleteMessage(id){
+  if (!confirm('Delete this message?')) return;
+  try { await deleteDoc(doc(db, 'messages', id)); }
+  catch (e) { S.chatErr = friendly(e); paintChat(); }
+}
+
 /* ---------- actions ---------- */
 async function login(){
   if (S.busy) return;
@@ -661,9 +916,13 @@ async function saveProfile(isNew){
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-act],[data-tab],[data-del],[data-fly],[data-res]');
+  const t = e.target.closest('[data-act],[data-tab],[data-del],[data-fly],[data-res],[data-rsvp],[data-goplace],[data-delplan],[data-delmsg]');
   if (!t) return;
   if (t.dataset.tab){ S.tab = t.dataset.tab; render(); return; }
+  if (t.dataset.rsvp){ toggleRsvp(t.dataset.plan, t.dataset.rsvp); return; }
+  if (t.dataset.goplace){ S.focus = t.dataset.goplace; S.tab = 'map'; render(); return; }
+  if (t.dataset.delplan){ deletePlan(t.dataset.delplan); return; }
+  if (t.dataset.delmsg){ deleteMessage(t.dataset.delmsg); return; }
   if (t.dataset.del){ deletePlace(t.dataset.del); return; }
   if (t.dataset.res !== undefined){ pickResult(Number(t.dataset.res)); return; }
   if (t.dataset.fly){ flyToPlace(t.dataset.fly); return; }
@@ -674,6 +933,8 @@ document.addEventListener('click', e => {
   else if (a === 'locate') locateMe();
   else if (a === 'addmode'){ if (S.adding) cancelAdd(); else startAdd(); }
   else if (a === 'canceladd') cancelAdd();
+  else if (a === 'newplan') showPlanForm();
+  else if (a === 'cancelplan'){ const bx = $('planbox'); if (bx) bx.innerHTML = ''; }
 });
 document.addEventListener('submit', e => {
   e.preventDefault();
@@ -681,6 +942,8 @@ document.addEventListener('submit', e => {
   else if (e.target.id === 'pf-edit') saveProfile(false);
   else if (e.target.id === 'pf-place') savePlace();
   else if (e.target.id === 'search-form') searchPlace();
+  else if (e.target.id === 'pf-plan') savePlan();
+  else if (e.target.id === 'chat-form') sendMessage();
 });
 
 function startMembers(){
@@ -699,6 +962,29 @@ function startMembers(){
       },
       e => { S.unsubP = null; S.placesErr = friendly(e); paintPlaces(); });
   }
+  if (!S.unsubPl){
+    S.unsubPl = onSnapshot(collection(db, 'plans'),
+      snap => {
+        S.plansErr = '';
+        S.plans = snap.docs.map(d => Object.assign({ id: d.id }, d.data({ serverTimestamps:'estimate' })));
+        paintPlans();
+      },
+      e => { S.unsubPl = null; S.plansErr = friendly(e); paintPlans(); });
+  }
+  if (!S.unsubR){
+    S.unsubR = onSnapshot(collection(db, 'rsvps'),
+      snap => { S.rsvps = snap.docs.map(d => d.data()); paintPlans(); },
+      e => { S.unsubR = null; S.plansErr = friendly(e); paintPlans(); });
+  }
+  if (!S.unsubM){
+    S.unsubM = onSnapshot(query(collection(db, 'messages'), orderBy('createdAt', 'desc'), limit(100)),
+      snap => {
+        S.chatErr = '';
+        S.msgs = snap.docs.map(d => Object.assign({ id: d.id }, d.data({ serverTimestamps:'estimate' })));
+        paintChat();
+      },
+      e => { S.unsubM = null; S.chatErr = friendly(e); paintChat(); });
+  }
 }
 
 /* ---------- start ---------- */
@@ -706,9 +992,13 @@ render();
 onAuthStateChanged(auth, async u => {
   if (S.unsub){ S.unsub(); S.unsub = null; }
   if (S.unsubP){ S.unsubP(); S.unsubP = null; }
+  if (S.unsubPl){ S.unsubPl(); S.unsubPl = null; }
+  if (S.unsubR){ S.unsubR(); S.unsubR = null; }
+  if (S.unsubM){ S.unsubM(); S.unsubM = null; }
   destroyMap();
   S.user = u; S.profile = null; S.members = []; S.places = []; S.view = null;
-  S.loadErr = ''; S.listErr = ''; S.placesErr = ''; S.tab = 'map';
+  S.plans = []; S.rsvps = []; S.msgs = [];
+  S.loadErr = ''; S.listErr = ''; S.placesErr = ''; S.plansErr = ''; S.chatErr = ''; S.tab = 'map';
   if (u){
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
