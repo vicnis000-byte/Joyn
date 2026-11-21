@@ -200,7 +200,12 @@ function fields(p, forNew){
       <textarea id="f-bio" maxlength="160" placeholder="One or two lines about you">${esc(p ? p.bio : '')}</textarea>
       <span class="hint">Up to 160 letters. Everyone in the group can see this.</span>
     </div>
-    ${forNew ? `<label class="check"><input id="f-age" type="checkbox"><span>I am 18 years or older</span></label>` : ''}`;
+    ${forNew ? `<div class="field">
+      <label for="f-code">Group code</label>
+      <input id="f-code" type="text" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <span class="hint">Ask the friend who invited you for this code.</span>
+    </div>
+    <label class="check"><input id="f-age" type="checkbox"><span>I am 18 years or older</span></label>` : ''}`;
 }
 
 function onboardView(){
@@ -315,18 +320,21 @@ async function saveProfile(isNew){
   const city = val('f-city').trim();
   const bio  = val('f-bio').trim();
   if (name.length < 2) return setMsg('Enter your name (at least 2 letters).');
+  const code = val('f-code').trim().toLowerCase();
+  if (isNew && !code) return setMsg('Enter the group code.');
   if (isNew && !($('f-age') && $('f-age').checked)) return setMsg('Please confirm that you are 18 or older.');
   setMsg('');
   setBusy(true);
   try {
     const data = { name, city, bio, photoURL: S.user.photoURL || '', updatedAt: serverTimestamp() };
-    if (isNew){ data.age18 = true; data.createdAt = serverTimestamp(); }
+    if (isNew){ data.age18 = true; data.createdAt = serverTimestamp(); data.inviteCode = code; }
     await setDoc(doc(db, 'users', S.user.uid), data, { merge: true });
     S.profile = Object.assign({}, S.profile || {}, { name, city, bio, photoURL: data.photoURL });
-    if (isNew) render();
+    if (isNew){ startMembers(); render(); }
     else { setMsg('Saved.', true); }
   } catch (e) {
-    setMsg(friendly(e));
+    if (isNew && e.code === 'permission-denied') setMsg('That group code is not correct. Check it and try again.');
+    else setMsg(friendly(e));
   } finally {
     setBusy(false);
   }
@@ -348,6 +356,13 @@ document.addEventListener('submit', e => {
   else if (e.target.id === 'pf-edit') saveProfile(false);
 });
 
+function startMembers(){
+  if (S.unsub) return;
+  S.unsub = onSnapshot(collection(db, 'users'),
+    snap => { S.listErr = ''; S.members = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); paintMembers(); },
+    e => { S.unsub = null; S.listErr = friendly(e); paintMembers(); });
+}
+
 /* ---------- start ---------- */
 render();
 onAuthStateChanged(auth, async u => {
@@ -360,9 +375,7 @@ onAuthStateChanged(auth, async u => {
     } catch (e) {
       S.loadErr = friendly(e);
     }
-    S.unsub = onSnapshot(collection(db, 'users'),
-      snap => { S.listErr = ''; S.members = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); paintMembers(); },
-      e => { S.listErr = friendly(e); paintMembers(); });
+    if (S.profile) startMembers();
   }
   S.ready = true;
   render();
