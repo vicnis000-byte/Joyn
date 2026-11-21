@@ -149,6 +149,19 @@ video.mv{width:100%;max-height:60vh;background:#000}
 .pop .pb{color:#6d6178;font-size:.8rem}
 .pop a{color:#B03380;font-weight:500}
 .pop .mini{color:#B03030;border-color:#d9ccd9;align-self:flex-start;margin-top:4px}
+
+.btn.sos{width:100%;border:0;color:#fff;font-weight:800;background:linear-gradient(135deg,#E5383B,#B21E2B);box-shadow:0 10px 24px -12px rgba(229,56,59,.9)}
+.sosbox{margin-top:12px;padding:14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.sosbox .hint{margin:8px 0 0}
+a.btn.call{width:100%;margin-top:10px;text-decoration:none;color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.bub.sosmsg{box-shadow:inset 0 0 0 2px #E5383B;background:rgba(229,56,59,.18)}
+.bub.sosmsg a{color:#fff;font-weight:700;text-decoration:underline;overflow-wrap:anywhere}
+
+.sosbox input{width:100%;min-height:46px;margin-top:8px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit}
+.sosbox .lbl{margin:14px 0 0;font-weight:700;font-size:.92rem}
+#sosact{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+#sosact a.btn{width:100%;text-decoration:none;color:#fff;border:0;background:linear-gradient(135deg,#1f9d63,#17744a)}
+#sosact a.btn.alt{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 </style>
 </head>
 <body>
@@ -313,6 +326,31 @@ function membersView(){
     <ul id="list" class="list"></ul>`;
 }
 
+function sosGet(){
+  try { return JSON.parse(localStorage.getItem('joyn_sos') || '{}') || {}; } catch (e) { return {}; }
+}
+function sosPhone(raw){
+  let d = String(raw || '').replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '0') d = d.slice(1);
+  if (d.length === 10) d = '91' + d;
+  return d;
+}
+
+function sosBox(){
+  const c = sosGet();
+  return `<div class="sosbox">
+    <button class="btn sos" type="button" data-act="sos">&#127384; SOS - I need help</button>
+    <p id="sosmsg" class="hint" role="status">Tap SOS to tell your group your location in chat. Then tap a green button to also message your emergency contact.</p>
+    <div id="sosact"></div>
+    <p class="lbl">Your emergency contact</p>
+    <input id="sos-name" type="text" maxlength="40" placeholder="Name (e.g. Papa)" value="${esc(c.name || '')}" autocomplete="off">
+    <input id="sos-phone" type="tel" maxlength="16" placeholder="Phone number (10 digits)" value="${esc(c.phone || '')}" autocomplete="off">
+    <input id="sos-mail" type="email" maxlength="80" placeholder="Email (optional)" value="${esc(c.mail || '')}" autocomplete="off">
+    <button class="btn small" type="button" data-act="savesos" style="margin-top:10px;width:100%">Save contact</button>
+    <p class="hint">This contact is saved only on this phone. Nobody in the group can see it.</p>
+  </div>`;
+}
+
 function meView(){
   const p = S.profile || {};
   return `<h2 class="h" style="margin-top:12px">Your profile</h2>
@@ -324,6 +362,9 @@ function meView(){
       <p id="msg" class="msg" role="alert"></p>
       <button class="btn primary" type="submit">Save changes</button>
     </form>
+    <div class="sep"></div>
+    <h2 class="h" style="font-size:1.1rem">Safety</h2>
+    ${sosBox()}
     <div class="sep"></div>
     <button class="btn" data-act="logout">Log out</button>`;
 }
@@ -843,10 +884,11 @@ function paintChat(){
     let sep = '';
     if (day !== last){ sep = `<div class="day">${esc(day)}</div>`; last = day; }
     const mine = m.by === me;
-    return sep + `<div class="bub${mine ? ' me' : ''}">
+    const isSos = typeof m.text === 'string' && m.text.indexOf('SOS!') === 0;
+    return sep + `<div class="bub${mine ? ' me' : ''}${isSos ? ' sosmsg' : ''}">
       ${mine ? '' : `<div class="who">${esc(m.byName || 'someone')}</div>`}
       ${mediaHtml(m)}
-      ${m.text ? `<div>${esc(m.text)}</div>` : ''}
+      ${m.text ? `<div>${isSos ? sosText(m.text) : esc(m.text)}</div>` : ''}
       <div class="tm"><span>${esc(timeLabel(d))}</span>${mine ? `<button type="button" class="lnk" data-delmsg="${esc(m.id)}">Delete</button>` : ''}</div>
     </div>`;
   }).join('');
@@ -1022,6 +1064,82 @@ async function saveProfile(isNew){
   }
 }
 
+function saveSosContact(){
+  const say = t => { const el = $('sosmsg'); if (el) el.textContent = t || ''; };
+  const name = val('sos-name').trim().slice(0, 40);
+  const phone = val('sos-phone').trim().slice(0, 16);
+  const mail = val('sos-mail').trim().slice(0, 80);
+  if (!phone && !mail) return say('Enter a phone number or an email first.');
+  if (phone && sosPhone(phone).length < 11) return say('Phone number looks wrong. Enter 10 digits.');
+  if (mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return say('Email looks wrong.');
+  try { localStorage.setItem('joyn_sos', JSON.stringify({ name, phone, mail })); }
+  catch (e) { return say('Could not save on this phone.'); }
+  say('Emergency contact saved.');
+}
+
+function showSosActions(text){
+  const box = $('sosact');
+  if (!box) return;
+  const c = sosGet();
+  const ph = sosPhone(c.phone);
+  const who = c.name ? ' ' + esc(c.name) : '';
+  const enc = encodeURIComponent(text);
+  let h = '';
+  if (ph.length >= 11){
+    h += `<a class="btn" href="https://wa.me/${ph}?text=${enc}" target="_blank" rel="noopener">WhatsApp${who}</a>`;
+    h += `<a class="btn" href="sms:+${ph}?body=${enc}">SMS${who}</a>`;
+    h += `<a class="btn alt" href="tel:+${ph}">Call${who}</a>`;
+  }
+  if (c.mail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.mail)){
+    h += `<a class="btn alt" href="mailto:${esc(c.mail)}?subject=${encodeURIComponent('SOS from Joyn')}&body=${enc}">Email${who}</a>`;
+  }
+  if (!h) h = '<p class="hint">No emergency contact saved yet. Save one below so next time you can alert them too.</p>';
+  box.innerHTML = h;
+}
+
+/* ---------- SOS ---------- */
+function sosText(t){
+  const re = /https:\/\/www\.google\.com\/maps\?q=-?\d{1,3}\.\d+,-?\d{1,3}\.\d+/;
+  const mt = String(t).match(re);
+  if (!mt) return '&#127384; ' + esc(t);
+  const rest = String(t).replace(mt[0], '').trim();
+  return '&#127384; ' + esc(rest) + `<br><a href="${mt[0]}" target="_blank" rel="noopener">Open location on map</a>`;
+}
+
+async function sendSos(){
+  if (S.sosBusy) return;
+  const say = t => { document.querySelectorAll('#sosmsg').forEach(el => { el.textContent = t || ''; }); };
+  if (!confirm('Send an SOS to your whole group with your location?')) return;
+  S.sosBusy = true;
+  say('Finding your location\u2026');
+  const name = (S.profile && S.profile.name) || 'Someone';
+  const getPos = () => new Promise(res => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(p => res(p), () => res(null), { enableHighAccuracy:true, timeout:12000, maximumAge:0 });
+  });
+  try {
+    const pos = await getPos();
+    let text = 'SOS! ' + name + ' needs help.';
+    if (pos){
+      text += ' Location: https://www.google.com/maps?q=' + pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6);
+    } else {
+      text += ' Location not available - please call them.';
+    }
+    await addDoc(collection(db, 'messages'), {
+      text: text.slice(0, 500),
+      by: S.user.uid,
+      byName: name,
+      createdAt: serverTimestamp()
+    });
+    say(pos ? 'SOS sent to the group chat. Now tap a green button to alert your emergency contact.' : 'SOS sent to the group chat, but your location could not be found. Allow location for this website.');
+    showSosActions(text);
+  } catch (e) {
+    say('SOS could not be sent: ' + ((e && e.code) ? friendly(e) : ((e && e.message) || 'unknown problem')) + ' Please call someone you trust.');
+  } finally {
+    S.sosBusy = false;
+  }
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act],[data-tab],[data-del],[data-fly],[data-res],[data-rsvp],[data-goplace],[data-delplan],[data-delmsg]');
@@ -1037,6 +1155,8 @@ document.addEventListener('click', e => {
   const a = t.dataset.act;
   if (a === 'login') login();
   else if (a === 'logout') logout();
+  else if (a === 'sos') sendSos();
+  else if (a === 'savesos') saveSosContact();
   else if (a === 'reload') location.reload();
   else if (a === 'locate') locateMe();
   else if (a === 'addmode'){ if (S.adding) cancelAdd(); else startAdd(); }
