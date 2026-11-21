@@ -104,7 +104,12 @@ h1,h2,h3,p{margin:0}
 .bub .tm{font-size:.7rem;color:var(--mute);margin-top:3px;display:flex;gap:10px;justify-content:flex-end}
 .day{align-self:center;font-size:.75rem;color:var(--mute);margin:6px 0;list-style:none;text-align:center}
 .lnk{background:none;border:0;color:var(--mute);font-size:.7rem;text-decoration:underline;cursor:pointer;padding:0}
-.shell.chat{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.shell.chat{padding-bottom:calc(175px + env(safe-area-inset-bottom,0px))}
+.icon{flex:none;width:46px;min-height:46px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:1.2rem;cursor:pointer}
+.cstat{max-width:30rem;margin:6px auto 0;font-size:.8rem;color:var(--mute);min-height:1.1em}
+.mv{display:block;max-width:100%;border-radius:12px;margin:4px 0}
+img.mv{max-height:60vh;object-fit:contain;background:#241c2b}
+video.mv{width:100%;max-height:60vh;background:#000}
 .composer{position:fixed;left:0;right:0;bottom:calc(67px + env(safe-area-inset-bottom,0px));z-index:1500;
   background:rgba(18,14,23,.96);border-top:1px solid var(--line);padding:10px 20px}
 .composer .cin{max-width:30rem;margin:0 auto;display:flex;gap:8px}
@@ -169,6 +174,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const CLD_CLOUD = 'kb0py2fm';
+const CLD_PRESET = 'joyn_unsigned';
+const MAX_VIDEO_MB = 60;
+
 /* ---------- small helpers ---------- */
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -179,7 +188,7 @@ const S = { ready:false, user:null, profile:null, members:[], tab:'map',
             busy:false, unsub:null, loadErr:'', listErr:'',
             places:[], unsubP:null, placesErr:'', results:[],
             plans:[], rsvps:[], msgs:[], unsubPl:null, unsubR:null, unsubM:null,
-            plansErr:'', chatErr:'', chatFirst:false, focus:null,
+            plansErr:'', chatErr:'', chatFirst:false, focus:null, uploading:false,
             map:null, layer:null, markers:{}, view:null,
             adding:false, pending:null, pendMarker:null, userMarker:null };
 
@@ -351,9 +360,12 @@ function chatView(){
     <div id="msgs" class="msgs"></div>
     <form id="chat-form" class="composer" novalidate>
       <div class="cin">
+        <button class="icon" type="button" data-act="attach" aria-label="Send a photo or video">&#128206;</button>
+        <input id="cfile" type="file" accept="image/*,video/*" hidden>
         <input id="cmsg" type="text" maxlength="500" placeholder="Message your group" autocomplete="off" enterkeyhint="send">
         <button class="btn small primary" type="submit">Send</button>
       </div>
+      <div id="cstat" class="cstat" role="status"></div>
     </form>`;
 }
 
@@ -833,11 +845,16 @@ function paintChat(){
     const mine = m.by === me;
     return sep + `<div class="bub${mine ? ' me' : ''}">
       ${mine ? '' : `<div class="who">${esc(m.byName || 'someone')}</div>`}
-      <div>${esc(m.text)}</div>
+      ${mediaHtml(m)}
+      ${m.text ? `<div>${esc(m.text)}</div>` : ''}
       <div class="tm"><span>${esc(timeLabel(d))}</span>${mine ? `<button type="button" class="lnk" data-delmsg="${esc(m.id)}">Delete</button>` : ''}</div>
     </div>`;
   }).join('');
-  if (S.chatFirst || atBottom){ S.chatFirst = false; window.scrollTo(0, document.body.scrollHeight); }
+  const stick = S.chatFirst || atBottom;
+  if (stick){ S.chatFirst = false; window.scrollTo(0, document.body.scrollHeight); }
+  box.querySelectorAll('img.mv').forEach(im => {
+    if (!im.complete) im.addEventListener('load', () => { if (stick) window.scrollTo(0, document.body.scrollHeight); });
+  });
 }
 
 async function sendMessage(){
@@ -864,6 +881,97 @@ async function deleteMessage(id){
   if (!confirm('Delete this message?')) return;
   try { await deleteDoc(doc(db, 'messages', id)); }
   catch (e) { S.chatErr = friendly(e); paintChat(); }
+}
+
+/* ---------- photos and videos ---------- */
+function mediaHtml(m){
+  const md = m && m.media;
+  if (!md || typeof md.url !== 'string' || !md.url.startsWith('https://res.cloudinary.com/')) return '';
+  if (md.type === 'video'){
+    return `<video class="mv" src="${esc(md.url)}" controls playsinline preload="metadata"></video>`;
+  }
+  const small = md.url.replace('/upload/', '/upload/c_limit,w_900,q_auto,f_auto/');
+  return `<a href="${esc(md.url)}" target="_blank" rel="noopener"><img class="mv" src="${esc(small)}" alt="Photo" loading="lazy"></a>`;
+}
+
+function shrinkImage(file){
+  return new Promise(resolve => {
+    if (file.type === 'image/gif'){ resolve(file); return; }
+    const img = new Image();
+    const u = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(u);
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h){ resolve(file); return; }
+      const k = Math.min(1, 1600 / Math.max(w, h));
+      w = Math.round(w * k); h = Math.round(h * k);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      c.toBlob(b => resolve(b && b.size < file.size ? b : file), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); resolve(file); };
+    img.src = u;
+  });
+}
+
+function uploadToCloudinary(blob, name, onPct){
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('file', blob, name || 'upload');
+    fd.append('upload_preset', CLD_PRESET);
+    const x = new XMLHttpRequest();
+    x.open('POST', 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload');
+    x.upload.onprogress = e => { if (e.lengthComputable) onPct(Math.round(e.loaded * 100 / e.total)); };
+    x.onload = () => {
+      try {
+        const j = JSON.parse(x.responseText);
+        if (x.status >= 200 && x.status < 300) resolve(j);
+        else reject(new Error((j.error && j.error.message) || 'upload failed'));
+      } catch (e) { reject(e); }
+    };
+    x.onerror = () => reject(new Error('no internet'));
+    x.send(fd);
+  });
+}
+
+async function handleFile(file){
+  if (!file || S.uploading) return;
+  const st = t => { const el = $('cstat'); if (el) el.textContent = t || ''; };
+  const isImg = String(file.type).startsWith('image/');
+  const isVid = String(file.type).startsWith('video/');
+  const MB = 1024 * 1024;
+  if (!isImg && !isVid) return st('Choose a photo or a video.');
+  if (isVid && file.size > MAX_VIDEO_MB * MB) return st('This video is bigger than ' + MAX_VIDEO_MB + ' MB. Choose a shorter one.');
+  if (isImg && file.size > 40 * MB) return st('This photo is too big.');
+  S.uploading = true;
+  st('Getting ready\u2026');
+  try {
+    let blob = file;
+    if (isImg){
+      blob = await shrinkImage(file);
+      if (blob.size > 10 * MB) throw new Error('The photo is bigger than 10 MB');
+    }
+    const res = await uploadToCloudinary(blob, file.name, pct => st((isVid ? 'Uploading video ' : 'Uploading photo ') + pct + '%'));
+    const url = String(res.secure_url || '');
+    if (!url.startsWith('https://res.cloudinary.com/')) throw new Error('unexpected reply');
+    st('Sending\u2026');
+    const input = $('cmsg');
+    const text = input ? input.value.trim().slice(0, 500) : '';
+    await addDoc(collection(db, 'messages'), {
+      text,
+      media: { url, type: res.resource_type === 'video' ? 'video' : 'image' },
+      by: S.user.uid,
+      byName: (S.profile && S.profile.name) || '',
+      createdAt: serverTimestamp()
+    });
+    if (input) input.value = '';
+    st('');
+  } catch (e) {
+    st(e && e.code ? friendly(e) : 'Could not send: ' + ((e && e.message) || 'unknown problem'));
+  } finally {
+    S.uploading = false;
+  }
 }
 
 /* ---------- actions ---------- */
@@ -934,7 +1042,15 @@ document.addEventListener('click', e => {
   else if (a === 'addmode'){ if (S.adding) cancelAdd(); else startAdd(); }
   else if (a === 'canceladd') cancelAdd();
   else if (a === 'newplan') showPlanForm();
+  else if (a === 'attach'){ const f = $('cfile'); if (f) f.click(); }
   else if (a === 'cancelplan'){ const bx = $('planbox'); if (bx) bx.innerHTML = ''; }
+});
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'cfile'){
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    handleFile(f);
+  }
 });
 document.addEventListener('submit', e => {
   e.preventDefault();
