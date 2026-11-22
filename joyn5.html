@@ -1045,9 +1045,13 @@ function FaceStep(){const [code]=useState(()=>String(1000+Math.floor(Math.random
  <p className="text-xs text-mute mt-3">Only the admin can see this video. It is deleted from the server as soon as you are approved or rejected.</p>
  {err&&<p className="text-rose text-sm mt-3">{err}</p>}
  <div className="mt-5"><Btn dis={st!=='idle'} onClick={rec}>{st==='rec'?'Recording… keep looking at the camera':st==='send'?'Sending…':'Start 4-second video'}</Btn></div></div>}
-function FaceVideo({f}){const [u,setU]=useState('');
- useEffect(()=>{try{const bin=atob(f.data);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);const url=URL.createObjectURL(new Blob([a],{type:f.mime||'video/mp4'}));setU(url);return()=>URL.revokeObjectURL(url)}catch(e){setU('')}},[f.data,f.mime]);
- return u?<div><video controls playsInline preload="metadata" src={u} className="w-full rounded-xl bg-black"/><a href={u} target="_blank" rel="noopener" className="text-xs text-gold underline">Open the video in a new tab</a><p className="text-xs text-mute">{f.mime} · {Math.round(f.data.length*3/4/1024)} KB</p></div>:<p className="text-xs text-rose">Could not load the video.</p>}
+function FaceVideo({f}){const [u,setU]=useState('');const [er,setEr]=useState('');
+ useEffect(()=>{let url='',dead=false;(async()=>{try{const d=String(f.data||'');if(!d)throw new Error('no video data');
+   const r=await fetch('data:'+(f.mime||'video/mp4')+';base64,'+d);const bl=await r.blob();if(!bl.size)throw new Error('empty video');
+   url=URL.createObjectURL(bl);if(!dead)setU(url)}catch(e){if(!dead)setEr(String((e&&e.message)||e))}})();
+  return()=>{dead=true;if(url)URL.revokeObjectURL(url)}},[f.data,f.mime]);
+ const kb=Math.round(String(f.data||'').length*3/4/1024);
+ return u?<div><video controls playsInline preload="metadata" src={u} className="w-full rounded-xl bg-black"/><a href={u} target="_blank" rel="noopener" className="text-xs text-gold underline">Open the video in a new tab</a><p className="text-xs text-mute">{f.mime} · {kb} KB</p></div>:<p className="text-xs text-mute">{er?'Could not load the video ('+er+'). '+f.mime+' · '+kb+' KB':'Loading video…'}</p>}
 function AdminPanel({toast}){const [u,setU]=useState([]);useEffect(()=>FB.watchUsers(setU),[]);const [fc,setFc]=useState({});useEffect(()=>FB.watchFaces(l=>{const m={};l.forEach(f=>{m[f.id]=f});setFc(m)}),[]);
  const me=FB.uid();const pend=u.filter(x=>x.approved!==true);const ok=u.filter(x=>x.approved===true&&x.id!==me);
  const row=(x,btns)=><div key={x.id} className="bg-card border border-line rounded-2xl p-4 mt-3"><p className="font-bold">{x.name} <span className="text-xs text-mute">{x.type} · {(x.ages||[]).join(' & ')}</span></p>{x.pref&&x.pref.bio&&<p className="text-sm text-mute mt-1">{x.pref.bio}</p>}{x.pref&&(x.pref.photos||[]).length>0&&<div className="flex gap-2 mt-2">{x.pref.photos.map((s,i)=><img key={i} src={s} alt="" className="w-16 h-20 object-cover rounded-xl"/>)}</div>}{fc[x.id]&&<div className="mt-3"><FaceVideo f={fc[x.id]}/><p className="text-xs text-gold mt-1">Number you should hear: {fc[x.id].code}</p></div>}<div className="flex gap-2 mt-3">{btns}</div></div>;
