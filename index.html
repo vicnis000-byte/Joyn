@@ -162,6 +162,8 @@ a.btn.call{width:100%;margin-top:10px;text-decoration:none;color:var(--text);box
 #sosact{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 #sosact a.btn{width:100%;text-decoration:none;color:#fff;border:0;background:linear-gradient(135deg,#1f9d63,#17744a)}
 #sosact a.btn.alt{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.langbtn{margin-left:auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.center .langbtn{margin:18px 0 0}
 </style>
 </head>
 <body>
@@ -196,6 +198,227 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $ = id => document.getElementById(id);
 const val = id => ($(id) ? $(id).value : '');
+
+/* ---------- language (English / हिंदी) ---------- */
+let LANG = 'en';
+try { LANG = localStorage.getItem('joyn_lang') === 'hi' ? 'hi' : 'en'; } catch (e) { LANG = 'en'; }
+const LOC = () => (LANG === 'hi' ? 'hi-IN' : 'en-IN');
+const HI = {
+"Loading…": "लोड हो रहा है…",
+"Could not load": "लोड नहीं हो सका",
+"Try again": "फिर से कोशिश करें",
+"Plans, people and places for your group.": "आपके ग्रुप के प्लान, लोग और जगहें।",
+"Continue with Google": "Google से आगे बढ़ें",
+"Only for friends who were invited. 18+ only.": "सिर्फ़ बुलाए गए दोस्तों के लिए। सिर्फ़ 18+ के लिए।",
+"Name": "नाम",
+"City": "शहर",
+"About you": "आपके बारे में",
+"For example: Lucknow": "जैसे: लखनऊ",
+"One or two lines about you": "अपने बारे में एक-दो लाइन",
+"Up to 160 letters. Everyone in the group can see this.": "160 अक्षर तक। ग्रुप में सब इसे देख सकते हैं।",
+"Group code": "ग्रुप कोड",
+"Ask the friend who invited you for this code.": "जिस दोस्त ने बुलाया उससे ये कोड माँगें।",
+"I am 18 years or older": "मेरी उम्र 18 साल या ज़्यादा है",
+"Set up your profile": "अपनी प्रोफ़ाइल बनाएँ",
+"This is what your group will see.": "ये आपका ग्रुप देखेगा।",
+"Save profile": "प्रोफ़ाइल सेव करें",
+"Use a different Google account": "दूसरा Google अकाउंट इस्तेमाल करें",
+"Your group": "आपका ग्रुप",
+"Nobody here yet. Share the app link with your group.": "अभी कोई नहीं है। ऐप का लिंक अपने ग्रुप को भेजें।",
+"you": "आप",
+"Your profile": "आपकी प्रोफ़ाइल",
+"Save changes": "बदलाव सेव करें",
+"Safety": "सुरक्षा",
+"Log out": "लॉग आउट",
+"SOS - I need help": "SOS - मुझे मदद चाहिए",
+"Tap SOS to tell your group your location in chat. Then tap a green button to also message your emergency contact.": "SOS दबाने पर ग्रुप चैट में आपकी लोकेशन जाएगी। फिर हरा बटन दबाकर अपने इमरजेंसी कॉन्टैक्ट को भी बताएँ।",
+"Your emergency contact": "आपका इमरजेंसी कॉन्टैक्ट",
+"Name (e.g. Papa)": "नाम (जैसे: पापा)",
+"Phone number (10 digits)": "फ़ोन नंबर (10 अंक)",
+"Email (optional)": "ईमेल (ज़रूरी नहीं)",
+"Save contact": "कॉन्टैक्ट सेव करें",
+"This contact is saved only on this phone. Nobody in the group can see it.": "ये कॉन्टैक्ट सिर्फ़ इसी फ़ोन में सेव है। ग्रुप में कोई नहीं देख सकता।",
+"Enter a phone number or an email first.": "पहले फ़ोन नंबर या ईमेल डालें।",
+"Phone number looks wrong. Enter 10 digits.": "फ़ोन नंबर ग़लत लग रहा है। 10 अंक डालें।",
+"Email looks wrong.": "ईमेल ग़लत लग रहा है।",
+"Could not save on this phone.": "इस फ़ोन में सेव नहीं हो सका।",
+"Emergency contact saved.": "इमरजेंसी कॉन्टैक्ट सेव हो गया।",
+"Finding your location…": "आपकी लोकेशन ढूँढ रहे हैं…",
+"SOS sent to the group chat. Now tap a green button to alert your emergency contact.": "SOS ग्रुप चैट में चला गया। अब हरे बटन से अपने इमरजेंसी कॉन्टैक्ट को बताएँ।",
+"SOS sent to the group chat, but your location could not be found. Allow location for this website.": "SOS ग्रुप चैट में चला गया, पर लोकेशन नहीं मिली। इस वेबसाइट के लिए लोकेशन की इजाज़त दें।",
+"No emergency contact saved yet. Save one below so next time you can alert them too.": "अभी कोई इमरजेंसी कॉन्टैक्ट सेव नहीं है। नीचे सेव करें, ताकि अगली बार उन्हें भी बता सकें।",
+"Open location on map": "लोकेशन मैप पर खोलें",
+"Places": "जगहें",
+"Cafes, trips and plans your group has pinned.": "आपके ग्रुप ने जो कैफ़े, ट्रिप और प्लान पिन किए हैं।",
+"Search a place or city": "जगह या शहर खोजें",
+"Search": "खोजें",
+"My location": "मेरी लोकेशन",
+"+ Add a place": "+ जगह जोड़ें",
+"Cancel": "रद्द करें",
+"Map": "मैप",
+"Plans": "प्लान",
+"Chat": "चैट",
+"Members": "सदस्य",
+"Me": "मेरा",
+"The map could not load. Check your internet and reload the page.": "मैप लोड नहीं हो सका। इंटरनेट देखें और पेज दोबारा खोलें।",
+"No places yet. Tap \"+ Add a place\" and pin the first one.": "अभी कोई जगह नहीं है। \"+ जगह जोड़ें\" दबाकर पहली जगह पिन करें।",
+"Drag the pin to adjust, then fill in the details below.": "पिन को खींचकर सही जगह लगाएँ, फिर नीचे जानकारी भरें।",
+"Tap the map where the place is, or search for it above.": "मैप पर उस जगह को दबाएँ, या ऊपर खोजें।",
+"New place": "नई जगह",
+"Name of the place": "जगह का नाम",
+"Type": "किस्म",
+"When (optional)": "कब (ज़रूरी नहीं)",
+"For example: Sat 5 Dec, evening": "जैसे: शनि 5 दिसं, शाम",
+"Note (optional)": "नोट (ज़रूरी नहीं)",
+"Why this place?": "ये जगह क्यों?",
+"Save place": "जगह सेव करें",
+"Cafe": "कैफ़े",
+"Trip": "ट्रिप",
+"Party": "पार्टी",
+"Food": "खाना",
+"Other": "दूसरा",
+"Enter the name of the place.": "जगह का नाम डालें।",
+"Tap the map to choose the spot first.": "पहले मैप पर जगह चुनें।",
+"Delete": "हटाएँ",
+"Open in Google Maps": "Google Maps में खोलें",
+"Delete plan": "प्लान हटाएँ",
+"Searching…": "खोज रहे हैं…",
+"Nothing found. Try another name, or add the city.": "कुछ नहीं मिला। दूसरा नाम आज़माएँ, या शहर जोड़ें।",
+"Search is not working right now. You can still tap the map.": "अभी खोज नहीं चल रही। आप मैप पर दबाकर जगह चुन सकते हैं।",
+"This browser cannot share your location.": "ये ब्राउज़र लोकेशन नहीं दे सकता।",
+"Finding you…": "आपको ढूँढ रहे हैं…",
+"Only you can see this blue dot.": "ये नीला डॉट सिर्फ़ आपको दिखता है।",
+"Could not get your location. Check that location is allowed for this website.": "लोकेशन नहीं मिली। देखें कि इस वेबसाइट को लोकेशन की इजाज़त है।",
+"Outings your group is planning. Tap Going so everyone knows.": "आपका ग्रुप जो घूमने-मिलने के प्लान बना रहा है। \"आ रहा हूँ\" दबाएँ ताकि सबको पता चले।",
+"Going": "आ रहा हूँ",
+"Maybe": "शायद",
+"Can't": "नहीं आ सकता",
+"+ New plan": "+ नया प्लान",
+"New plan": "नया प्लान",
+"What is the plan?": "प्लान क्या है?",
+"For example: Coffee at Blue Tokai": "जैसे: शाम को चाय-कॉफ़ी",
+"Date": "तारीख़",
+"Time (optional)": "समय (ज़रूरी नहीं)",
+"Place": "जगह",
+"Pin the place on the Map tab first, then pick it here.": "पहले मैप टैब में जगह पिन करें, फिर यहाँ चुनें।",
+"Create plan": "प्लान बनाएँ",
+"No place": "कोई जगह नहीं",
+"Enter what the plan is.": "प्लान क्या है ये लिखें।",
+"Choose a date.": "तारीख़ चुनें।",
+"No plans yet. Tap \"+ New plan\" and invite everyone.": "अभी कोई प्लान नहीं है। \"+ नया प्लान\" दबाकर सबको बुलाएँ।",
+"Earlier": "पहले के",
+"Going:": "आ रहे हैं:",
+"Maybe:": "शायद:",
+"Group chat": "ग्रुप चैट",
+"Send a photo or video": "फ़ोटो या वीडियो भेजें",
+"Message your group": "ग्रुप को मैसेज लिखें",
+"Send": "भेजें",
+"No messages yet. Say hello to your group!": "अभी कोई मैसेज नहीं। ग्रुप को नमस्ते कहें!",
+"Today": "आज",
+"Yesterday": "कल",
+"Getting ready…": "तैयारी हो रही है…",
+"Sending…": "भेज रहे हैं…",
+"Choose a photo or a video.": "फ़ोटो या वीडियो चुनें।",
+"This photo is too big.": "ये फ़ोटो बहुत बड़ी है।",
+"That group code is not correct. Check it and try again.": "ग्रुप कोड सही नहीं है। देखकर फिर कोशिश करें।",
+"Enter your name (at least 2 letters).": "अपना नाम डालें (कम से कम 2 अक्षर)।",
+"Enter the group code.": "ग्रुप कोड डालें।",
+"Please confirm that you are 18 or older.": "कृपया पक्का करें कि आपकी उम्र 18 या ज़्यादा है।",
+"Saved.": "सेव हो गया।",
+"This website address is not allowed in Firebase yet. Add it in Authentication > Settings > Authorized domains.": "इस वेबसाइट का पता Firebase में अभी मंज़ूर नहीं है। Authentication > Settings > Authorized domains में जोड़ें।",
+"No internet. Check your connection and try again.": "इंटरनेट नहीं है। कनेक्शन देखकर फिर कोशिश करें।",
+"The login window was blocked. Allow pop-ups and try again.": "लॉगिन विंडो रोक दी गई। पॉप-अप की इजाज़त देकर फिर कोशिश करें।",
+"The database refused this request. The Firestore rules need to be checked.": "डेटाबेस ने ये रिक्वेस्ट मना कर दी। Firestore rules देखने होंगे।",
+"The database cannot be reached right now. Try again in a minute.": "अभी डेटाबेस नहीं मिल रहा। एक मिनट बाद फिर कोशिश करें।",
+"Zoom in": "ज़ूम इन",
+"Zoom out": "ज़ूम आउट",
+"Delete this place?": "ये जगह हटानी है?",
+"Delete this plan?": "ये प्लान हटाना है?",
+"Delete this message?": "ये मैसेज हटाना है?",
+"Send an SOS to your whole group with your location?": "अपनी लोकेशन के साथ पूरे ग्रुप को SOS भेजना है?"
+};
+const HI_WORD = { going:'आ रहा हूँ', maybe:'शायद', "can't":'नहीं आ सकता' };
+function trCore(c){
+  if (Object.prototype.hasOwnProperty.call(HI, c)) return HI[c];
+  let m;
+  if ((m = /^(\d+) members?$/.exec(c))) return m[1] + ' सदस्य';
+  if ((m = /^Added by (.*)$/.exec(c))) return m[1] + ' ने जोड़ा';
+  if ((m = /^Planned by (.*)$/.exec(c))) return m[1] + ' ने बनाया';
+  if ((m = /^(Going|Maybe|Can't) (\d+)$/.exec(c))) return HI_WORD[m[1].toLowerCase()] + ' ' + m[2];
+  if ((m = /^Uploading video (\d+)%$/.exec(c))) return 'वीडियो अपलोड हो रहा है ' + m[1] + '%';
+  if ((m = /^Uploading photo (\d+)%$/.exec(c))) return 'फ़ोटो अपलोड हो रही है ' + m[1] + '%';
+  if ((m = /^This video is bigger than (\d+) MB\. Choose a shorter one\.$/.exec(c))) return 'ये वीडियो ' + m[1] + ' MB से बड़ा है। छोटा वीडियो चुनें।';
+  if ((m = /^([\s\S]*) \u2014 show on map$/.exec(c))) return m[1] + ' \u2014 मैप पर देखें';
+  if ((m = /^Something went wrong \(([\s\S]*)\)\.$/.exec(c))) return 'कुछ गड़बड़ हो गई (' + m[1] + ')।';
+  if ((m = /^SOS could not be sent: ([\s\S]*)$/.exec(c))) return 'SOS नहीं जा सका: ' + m[1];
+  if ((m = /^Could not send: ([\s\S]*)$/.exec(c))) return 'भेजा नहीं जा सका: ' + m[1];
+  if ((m = /^Call(?: (.+))?$/.exec(c))) return 'कॉल करें' + (m[1] ? ' ' + m[1] : '');
+  if ((m = /^Email(?: (.+))?$/.exec(c))) return 'ईमेल भेजें' + (m[1] ? ' ' + m[1] : '');
+  return null;
+}
+function trText(raw){
+  const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(raw);
+  const core = m[2];
+  if (!core) return raw;
+  let out = trCore(core);
+  if (out === null){
+    const lm = /^([^\p{L}\p{N}"'(]+)([\s\S]+)$/u.exec(core);
+    if (lm){ const o2 = trCore(lm[2]); if (o2 !== null) out = lm[1] + o2; }
+  }
+  return out === null ? raw : m[1] + out + m[3];
+}
+const tr = s => (LANG === 'hi' ? trText(s) : s);
+
+const SKIP_SEL = '.bub:not(.tm), .nm, .ct, .bio, .pt, .note, .res';
+function trNodeText(n){
+  const par = n.parentElement;
+  if (!par) return;
+  const t = par.tagName;
+  if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEXTAREA') return;
+  if (par.closest(SKIP_SEL) && !par.closest('.tm')) return;
+  const v = trText(n.nodeValue);
+  if (v !== n.nodeValue) n.nodeValue = v;
+}
+function trApply(root){
+  if (LANG !== 'hi' || !root) return;
+  if (root.nodeType === 3){ trNodeText(root); return; }
+  if (root.nodeType !== 1) return;
+  const els = [root].concat(Array.prototype.slice.call(root.querySelectorAll('[placeholder],[aria-label],[title]')));
+  els.forEach(el => {
+    ['placeholder', 'aria-label', 'title'].forEach(a => {
+      const v = el.getAttribute && el.getAttribute(a);
+      if (v){ const o = trText(v); if (o !== v) el.setAttribute(a, o); }
+    });
+  });
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const list = [];
+  while (w.nextNode()) list.push(w.currentNode);
+  list.forEach(trNodeText);
+}
+const trObserver = new MutationObserver(muts => {
+  if (LANG !== 'hi') return;
+  trObserver.disconnect();
+  try {
+    muts.forEach(m => {
+      if (m.type === 'characterData') trApply(m.target);
+      else m.addedNodes.forEach(trApply);
+    });
+  } catch (e) { /* ignore */ }
+  trObserver.observe(document.body, { childList:true, subtree:true, characterData:true });
+});
+trObserver.observe(document.body, { childList:true, subtree:true, characterData:true });
+document.documentElement.lang = LANG;
+
+function langBtn(){
+  return `<button class="langbtn" type="button" data-act="lang">${LANG === 'hi' ? 'English' : 'हिंदी'}</button>`;
+}
+function toggleLang(){
+  LANG = LANG === 'hi' ? 'en' : 'hi';
+  try { localStorage.setItem('joyn_lang', LANG); } catch (e) { /* ignore */ }
+  document.documentElement.lang = LANG;
+  render();
+  if (LANG === 'hi') trApply(document.body);
+}
 
 const S = { ready:false, user:null, profile:null, members:[], tab:'map',
             busy:false, unsub:null, loadErr:'', listErr:'',
@@ -278,6 +501,7 @@ function loginView(){
     <button class="btn primary" data-act="login">Continue with Google</button>
     <p id="msg" class="msg" role="alert"></p>
     <p class="fine">Only for friends who were invited. 18+ only.</p>
+    ${langBtn()}
   </main>`;
 }
 
@@ -307,7 +531,7 @@ function fields(p, forNew){
 
 function onboardView(){
   return `<main class="page">
-    <div>${logo(48, 'O')}</div>
+    <div style="display:flex;align-items:center">${logo(48, 'O')}${langBtn()}</div>
     <h2 class="h" style="margin-top:14px">Set up your profile</h2>
     <p class="muted" style="margin-top:6px">This is what your group will see.</p>
     <form id="pf-new" class="form" novalidate>
@@ -421,7 +645,7 @@ function tabView(){
 function mainView(){
   const b = (t, label) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}">${label}</button>`;
   return `<div class="shell${S.tab === 'chat' ? ' chat' : ''}">
-    <header class="top">${logo(30, 'H')}<span class="brand">Joyn</span></header>
+    <header class="top">${logo(30, 'H')}<span class="brand">Joyn</span>${langBtn()}</header>
     <main id="view">${tabView()}</main>
   </div>
   <nav class="tabs" aria-label="Main">
@@ -649,7 +873,7 @@ async function savePlace(){
 }
 
 async function deletePlace(id){
-  if (!confirm('Delete this place?')) return;
+  if (!confirm(tr('Delete this place?'))) return;
   try { await deleteDoc(doc(db, 'places', id)); }
   catch (e) { const m = $('mapmsg'); if (m) m.textContent = friendly(e); }
 }
@@ -723,7 +947,7 @@ function todayStr(){
 function fmtDate(str){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str || '');
   if (!m) return esc(str || '');
-  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(LOC(), { weekday:'short', day:'numeric', month:'short' });
 }
 function fmtTime(t){
   const m = /^(\d{2}):(\d{2})$/.exec(t || '');
@@ -813,7 +1037,7 @@ async function toggleRsvp(planId, status){
 }
 
 async function deletePlan(id){
-  if (!confirm('Delete this plan?')) return;
+  if (!confirm(tr('Delete this plan?'))) return;
   try { await deleteDoc(doc(db, 'plans', id)); }
   catch (e) { S.plansErr = friendly(e); paintPlans(); }
 }
@@ -863,9 +1087,9 @@ function dayLabel(d){
   const diff = Math.round((t - x) / 86400000);
   if (diff === 0) return 'Today';
   if (diff === 1) return 'Yesterday';
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  return d.toLocaleDateString(LOC(), { day:'numeric', month:'short' });
 }
-function timeLabel(d){ return d.toLocaleTimeString('en-IN', { hour:'numeric', minute:'2-digit' }); }
+function timeLabel(d){ return d.toLocaleTimeString(LOC(), { hour:'numeric', minute:'2-digit' }); }
 
 function paintChat(){
   const box = $('msgs');
@@ -920,7 +1144,7 @@ async function sendMessage(){
 }
 
 async function deleteMessage(id){
-  if (!confirm('Delete this message?')) return;
+  if (!confirm(tr('Delete this message?'))) return;
   try { await deleteDoc(doc(db, 'messages', id)); }
   catch (e) { S.chatErr = friendly(e); paintChat(); }
 }
@@ -1109,7 +1333,7 @@ function sosText(t){
 async function sendSos(){
   if (S.sosBusy) return;
   const say = t => { document.querySelectorAll('#sosmsg').forEach(el => { el.textContent = t || ''; }); };
-  if (!confirm('Send an SOS to your whole group with your location?')) return;
+  if (!confirm(tr('Send an SOS to your whole group with your location?'))) return;
   S.sosBusy = true;
   say('Finding your location\u2026');
   const name = (S.profile && S.profile.name) || 'Someone';
@@ -1119,11 +1343,12 @@ async function sendSos(){
   });
   try {
     const pos = await getPos();
-    let text = 'SOS! ' + name + ' needs help.';
+    const hi = LANG === 'hi';
+    let text = hi ? ('SOS! ' + name + ' को मदद चाहिए।') : ('SOS! ' + name + ' needs help.');
     if (pos){
-      text += ' Location: https://www.google.com/maps?q=' + pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6);
+      text += (hi ? ' लोकेशन: ' : ' Location: ') + 'https://www.google.com/maps?q=' + pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6);
     } else {
-      text += ' Location not available - please call them.';
+      text += hi ? ' लोकेशन नहीं मिली - कृपया उन्हें कॉल करें।' : ' Location not available - please call them.';
     }
     await addDoc(collection(db, 'messages'), {
       text: text.slice(0, 500),
@@ -1156,6 +1381,7 @@ document.addEventListener('click', e => {
   if (a === 'login') login();
   else if (a === 'logout') logout();
   else if (a === 'sos') sendSos();
+  else if (a === 'lang') toggleLang();
   else if (a === 'savesos') saveSosContact();
   else if (a === 'reload') location.reload();
   else if (a === 'locate') locateMe();
