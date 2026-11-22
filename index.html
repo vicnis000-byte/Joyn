@@ -164,6 +164,39 @@ a.btn.call{width:100%;margin-top:10px;text-decoration:none;color:var(--text);box
 #sosact a.btn.alt{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 .langbtn{margin-left:auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
 .center .langbtn{margin:18px 0 0}
+
+/* ---- Joyn_5 look ---- */
+.top{padding:14px 0 4px}
+.brand{color:var(--gold)}
+.word{background:linear-gradient(90deg,#F2C879,#E8507F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.h{background:linear-gradient(90deg,#ffffff,#d9c6ea);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-.01em}
+.head{display:flex;align-items:center;gap:12px;margin-top:14px}
+.head .hi{flex:none;width:40px;height:40px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#F7D58E,#E9B35E);color:var(--ink)}
+.head .h{font-size:1.6rem;line-height:1.05}
+.head .crumb{font-size:.74rem;color:var(--mute);margin-top:4px;line-height:1.3}
+.row,.card,.sosbox,.me-card{background-image:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0));border-radius:24px;
+  box-shadow:0 14px 34px -22px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05)}
+.row,.sosbox,.me-card{background-color:var(--card);border:1px solid var(--line);padding:16px}
+.me-card{margin-top:16px}
+.empty{border-radius:24px}
+.sosbox{margin-top:12px}
+.map{border-radius:24px}
+.field input[type=text],.field input[type=date],.field input[type=time],.field textarea,.field select{border-radius:16px}
+.mini{border-radius:999px}
+.av b{font-family:'Fraunces',Georgia,serif;color:var(--ink)}
+.bub{border-radius:18px 18px 18px 6px}
+.bub.me{background:linear-gradient(135deg,#F0568A,#C2408F);color:#fff;border-radius:18px 18px 6px 18px}
+.bub.me .tm,.bub.me .lnk{color:rgba(255,255,255,.85)}
+.bub.sosmsg{border-radius:18px}
+.composer input,.searchrow input{border-radius:999px;padding:0 18px}
+.icon{border-radius:50%}
+.tabs{gap:0;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(18,14,23,.88)}
+.tabs button{flex:1;max-width:none;min-height:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:11px;font-weight:500;padding:0;border-radius:0;background:transparent;box-shadow:none;color:var(--mute)}
+.tabs button .pill{display:flex;padding:4px 16px;border-radius:999px;transition:background .2s,color .2s}
+.tabs button.on{background:transparent;box-shadow:none;color:var(--gold);font-weight:700}
+.tabs button.on .pill{background:linear-gradient(135deg,#F7D58E,#E9B35E);color:var(--ink);box-shadow:0 6px 16px -6px rgba(242,200,121,.9)}
+.composer{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
@@ -462,6 +495,22 @@ function logo(size, k){
 </svg>`;
 }
 
+const IC = {
+  map:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  events:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M12 12.6l1.1 2.2 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.7 7L3 20.5l1.6-5A8 8 0 1 1 21 12z"/>',
+  groups:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.8 0 4.5 1.9 4.5 4.5"/>',
+  me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2.2 2.2L15.500 10"/>'
+};
+function ico(k, size){
+  const z = size || 22;
+  return `<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k] || ''}</svg>`;
+}
+function head(icon, title, crumb){
+  return `<div class="head"><span class="hi">${ico(icon, 22)}</span><div><h2 class="h">${title}</h2>${crumb ? `<p class="crumb">${crumb}</p>` : ''}</div></div>`;
+}
+
 function avatar(p, big){
   const ini = esc(((p && p.name) || '?').trim().charAt(0).toUpperCase() || '?');
   const img = p && p.photoURL
@@ -545,8 +594,7 @@ function onboardView(){
 }
 
 function membersView(){
-  return `<h2 class="h" style="margin-top:12px">Your group</h2>
-    <p id="count" class="muted" style="margin-top:4px"></p>
+  return `${head('groups', 'Your group', '<span id="count"></span>')}
     <ul id="list" class="list"></ul>`;
 }
 
@@ -577,7 +625,7 @@ function sosBox(){
 
 function meView(){
   const p = S.profile || {};
-  return `<h2 class="h" style="margin-top:12px">Your profile</h2>
+  return `${head('me', 'Your profile')}
     <div class="me-card">${avatar(p, true)}
       <div><div style="font-weight:700;overflow-wrap:anywhere">${esc(p.name)}</div>
       <div class="em">${esc(S.user.email || '')}</div></div></div>
@@ -587,15 +635,14 @@ function meView(){
       <button class="btn primary" type="submit">Save changes</button>
     </form>
     <div class="sep"></div>
-    <h2 class="h" style="font-size:1.1rem">Safety</h2>
+    ${head('shield', 'Safety')}
     ${sosBox()}
     <div class="sep"></div>
     <button class="btn" data-act="logout">Log out</button>`;
 }
 
 function mapView(){
-  return `<h2 class="h" style="margin-top:12px">Places</h2>
-    <p class="muted" style="margin-top:4px">Cafes, trips and plans your group has pinned.</p>
+  return `${head('map', 'Places', 'Cafes, trips and plans your group has pinned.')}
     <form id="search-form" class="searchrow" novalidate>
       <input id="q" type="text" maxlength="80" placeholder="Search a place or city" autocomplete="off" enterkeyhint="search">
       <button class="btn small" type="submit">Search</button>
@@ -613,15 +660,14 @@ function mapView(){
 }
 
 function plansView(){
-  return `<h2 class="h" style="margin-top:12px">Plans</h2>
-    <p class="muted" style="margin-top:4px">Outings your group is planning. Tap Going so everyone knows.</p>
+  return `${head('events', 'Plans', 'Outings your group is planning. Tap Going so everyone knows.')}
     <button class="btn primary" type="button" data-act="newplan" style="margin-top:16px">+ New plan</button>
     <div id="planbox"></div>
     <ul id="planlist" class="list"></ul>`;
 }
 
 function chatView(){
-  return `<h2 class="h" style="margin-top:12px">Group chat</h2>
+  return `${head('chat', 'Group chat')}
     <div id="msgs" class="msgs"></div>
     <form id="chat-form" class="composer" novalidate>
       <div class="cin">
@@ -643,13 +689,13 @@ function tabView(){
 }
 
 function mainView(){
-  const b = (t, label) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}">${label}</button>`;
+  const b = (t, label, ic) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}"${S.tab === t ? ' aria-current="page"' : ''}><span class="pill">${ico(ic, 22)}</span><span>${label}</span></button>`;
   return `<div class="shell${S.tab === 'chat' ? ' chat' : ''}">
     <header class="top">${logo(30, 'H')}<span class="brand">Joyn</span>${langBtn()}</header>
     <main id="view">${tabView()}</main>
   </div>
   <nav class="tabs" aria-label="Main">
-    ${b('map', 'Map')}${b('plans', 'Plans')}${b('chat', 'Chat')}${b('members', 'Members')}${b('me', 'Me')}
+    ${b('map', 'Map', 'map')}${b('plans', 'Plans', 'events')}${b('chat', 'Chat', 'chat')}${b('members', 'Members', 'groups')}${b('me', 'Me', 'me')}
   </nav>`;
 }
 
